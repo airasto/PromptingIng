@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prompt inžiniering — pokročilé techniky</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#2B7FD6; --accent-hover:#1F6CBB;
+  --midnight:#061A2E; --deep:#0D2E52; --mid:#14509A;
+  --light-blue:#6BB2F0; --pale:#CFE6FA;
+  --text:#333333; --text-muted:#54595F;
+  --white:#FFFFFF; --surface:#F0F7FD;
+  --grad-deep:linear-gradient(135deg,#061A2E,#14509A);
+  --font:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; font-family:var(--font); color:var(--text); background:var(--white);
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.hero{
+  background:var(--grad-deep); color:var(--white); padding:44px 24px 34px;
+  position:relative; overflow:hidden;
+}
+.hero .logo{height:36px;width:auto;display:block;margin-bottom:22px}
+.hero h1{font-size:30px;font-weight:800;line-height:1.2;margin:0 0 8px;max-width:720px}
+.hero p{font-size:14px;color:var(--pale);max-width:640px;margin:0;line-height:1.6}
+.hero .net-deco{position:absolute;right:-30px;bottom:-30px;height:200px;opacity:.20;pointer-events:none}
+.meta{max-width:1180px;margin:0 auto;padding:0 24px}
+.meta-bar{
+  display:flex;gap:24px;flex-wrap:wrap;padding:16px 0 14px;
+  font-size:12px;color:var(--text-muted);
+}
+.meta-bar span b{color:var(--midnight)}
+
+.layout{max-width:1180px;margin:0 auto;padding:0 24px 64px;display:flex;gap:28px;align-items:flex-start}
+
+.sidebar{
+  flex:0 0 240px; position:sticky; top:16px;
+  display:flex; flex-direction:column; gap:6px;
+  max-height:calc(100vh - 32px); overflow-y:auto;
+}
+.side-btn{
+  display:flex; align-items:center; gap:10px; text-align:left;
+  background:none; border:none; border-left:3px solid transparent;
+  padding:10px 12px; border-radius:0 8px 8px 0; cursor:pointer;
+  font-family:var(--font); font-size:13px; font-weight:500; color:var(--text);
+  transition:background .12s, border-color .12s;
+}
+.side-btn .badge{
+  font-family:var(--mono); font-size:10.5px; font-weight:500; color:var(--accent);
+  background:var(--surface); border-radius:4px; padding:2px 6px; flex:0 0 auto;
+}
+.side-btn:hover{background:var(--surface)}
+.side-btn.active{background:var(--surface); border-left-color:var(--accent); font-weight:700; color:var(--midnight)}
+.side-btn.active .badge{background:var(--accent); color:var(--white)}
+
+.content{flex:1 1 auto; min-width:0}
+
+.card{
+  background:var(--surface); border-radius:12px; padding:28px 30px;
+  border-left:3px solid var(--accent);
+}
+.card .num{
+  display:inline-block; font-family:var(--mono); font-size:12px; font-weight:500;
+  color:var(--white); background:var(--accent); border-radius:5px; padding:2px 9px; margin-bottom:10px;
+}
+.card h2{font-size:22px;font-weight:700;color:var(--midnight);margin:0 0 10px}
+.card .why{font-size:14px;line-height:1.7;color:var(--text);margin:0 0 22px}
+
+.examples-label{
+  font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.03em;
+  color:var(--text-muted); text-transform:uppercase; margin:0 0 10px;
+}
+.prompt-block{background:var(--deep); border-radius:8px; padding:12px 14px; margin:0 0 14px}
+.prompt-head{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px}
+.prompt-head .ex-label{font-family:var(--mono); font-size:11px; color:var(--light-blue); font-weight:500}
+.prompt-block pre{
+  margin:0; font-family:var(--mono); font-size:12.5px; line-height:1.7;
+  color:var(--pale); white-space:pre-wrap; word-break:break-word;
+}
+.copy-btn{
+  flex:0 0 auto; background:var(--accent); color:var(--white);
+  border:none; border-radius:6px; font-family:var(--font); font-size:11px; font-weight:600;
+  padding:5px 10px; cursor:pointer; transition:background .15s;
+}
+.copy-btn:hover{background:var(--accent-hover)}
+.copy-btn.copied{background:#2E8B57}
+
+.impact{
+  font-size:13px; line-height:1.6; color:var(--text-muted);
+  background:var(--pale); border-radius:8px; padding:12px 14px; margin-top:20px;
+}
+.impact b{color:var(--midnight)}
+
+footer{
+  max-width:1180px;margin:0 auto;padding:24px 24px 40px;display:flex;justify-content:space-between;
+  align-items:center;font-size:12px;color:var(--text-muted);border-top:1px solid var(--pale);
+}
+
+@media (prefers-color-scheme: dark){
+  body{background:var(--midnight);color:var(--white)}
+  .card{background:var(--deep)}
+  .card h2{color:var(--white)}
+  .card .why{color:#E4EDF7}
+  .impact{background:var(--deep);color:var(--light-blue);border:1px solid var(--mid)}
+  .impact b{color:var(--white)}
+  footer{color:var(--light-blue);border-top-color:var(--mid)}
+  .meta-bar{color:var(--light-blue)}
+  .meta-bar span b{color:var(--white)}
+  .side-btn{color:#E4EDF7}
+  .side-btn:hover{background:var(--deep)}
+  .side-btn.active{background:var(--deep)}
+  .side-btn .badge{background:var(--midnight)}
+  .prompt-block{background:var(--midnight)}
+}
+
+@media (max-width:820px){
+  .layout{flex-direction:column}
+  .sidebar{
+    position:static; flex-direction:row; overflow-x:auto; overflow-y:hidden;
+    max-height:none; width:100%; padding-bottom:6px; gap:8px;
+  }
+  .side-btn{flex:0 0 auto; border-left:none; border-bottom:3px solid transparent; border-radius:8px 8px 0 0; white-space:nowrap}
+  .side-btn.active{border-left-color:transparent; border-bottom-color:var(--accent)}
+  .hero{padding:36px 18px 28px}
+  .hero h1{font-size:24px}
+  .layout{padding:0 16px 48px}
+  .card{padding:22px 18px}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <svg class="logo" viewBox="32 26 400 152" role="img" aria-label="Rasťo AI">
+    <g fill="none" stroke="#6BB2F0" stroke-width="1.4" opacity="0.55"><line x1="120" y1="110" x2="94.0" y2="96.2"/><line x1="120" y1="110" x2="105.0" y2="86.1"/><line x1="120" y1="110" x2="120.0" y2="82.4"/><line x1="120" y1="110" x2="135.0" y2="86.1"/><line x1="120" y1="110" x2="146.0" y2="96.2"/><line x1="94.0" y1="96.2" x2="105.0" y2="86.1"/><line x1="94.0" y1="96.2" x2="120.0" y2="82.4"/><line x1="94.0" y1="96.2" x2="68.8" y2="118.3"/><line x1="94.0" y1="96.2" x2="71.1" y2="93.6"/><line x1="94.0" y1="96.2" x2="86.6" y2="73.4"/><line x1="105.0" y1="86.1" x2="120.0" y2="82.4"/><line x1="105.0" y1="86.1" x2="135.0" y2="86.1"/><line x1="105.0" y1="86.1" x2="86.6" y2="73.4"/><line x1="105.0" y1="86.1" x2="111.0" y2="62.9"/><line x1="120.0" y1="82.4" x2="135.0" y2="86.1"/><line x1="120.0" y1="82.4" x2="146.0" y2="96.2"/><line x1="120.0" y1="82.4" x2="111.0" y2="62.9"/><line x1="120.0" y1="82.4" x2="137.8" y2="65.0"/><line x1="135.0" y1="86.1" x2="146.0" y2="96.2"/><line x1="135.0" y1="86.1" x2="111.0" y2="62.9"/><line x1="135.0" y1="86.1" x2="137.8" y2="65.0"/><line x1="135.0" y1="86.1" x2="159.8" y2="79.2"/><line x1="146.0" y1="96.2" x2="137.8" y2="65.0"/><line x1="146.0" y1="96.2" x2="159.8" y2="79.2"/><line x1="146.0" y1="96.2" x2="171.2" y2="101.7"/><line x1="68.8" y1="118.3" x2="71.1" y2="93.6"/><line x1="68.8" y1="118.3" x2="57.6" y2="143.1"/><line x1="68.8" y1="118.3" x2="48.0" y2="110.0"/><line x1="71.1" y1="93.6" x2="86.6" y2="73.4"/><line x1="71.1" y1="93.6" x2="48.0" y2="110.0"/><line x1="71.1" y1="93.6" x2="57.6" y2="76.9"/><line x1="86.6" y1="73.4" x2="111.0" y2="62.9"/><line x1="86.6" y1="73.4" x2="57.6" y2="76.9"/><line x1="86.6" y1="73.4" x2="84.0" y2="52.6"/><line x1="111.0" y1="62.9" x2="137.8" y2="65.0"/><line x1="111.0" y1="62.9" x2="84.0" y2="52.6"/><line x1="111.0" y1="62.9" x2="120.0" y2="43.8"/><line x1="137.8" y1="65.0" x2="159.8" y2="79.2"/><line x1="137.8" y1="65.0" x2="120.0" y2="43.8"/><line x1="137.8" y1="65.0" x2="156.0" y2="52.6"/><line x1="159.8" y1="79.2" x2="171.2" y2="101.7"/><line x1="159.8" y1="79.2" x2="156.0" y2="52.6"/><line x1="159.8" y1="79.2" x2="182.4" y2="76.9"/><line x1="171.2" y1="101.7" x2="182.4" y2="76.9"/><line x1="171.2" y1="101.7" x2="192.0" y2="110.0"/></g>
+    <g stroke="none"><circle cx="120" cy="110" r="5.5" fill="#FFFFFF"/><circle cx="94.0" cy="96.2" r="4" fill="#6BB2F0"/><circle cx="105.0" cy="86.1" r="3" fill="#6BB2F0"/><circle cx="120.0" cy="82.4" r="4" fill="#FFFFFF"/><circle cx="135.0" cy="86.1" r="3" fill="#6BB2F0"/><circle cx="146.0" cy="96.2" r="4" fill="#6BB2F0"/><circle cx="68.8" cy="118.3" r="4" fill="#6BB2F0"/><circle cx="71.1" cy="93.6" r="3" fill="#6BB2F0"/><circle cx="86.6" cy="73.4" r="4" fill="#6BB2F0"/><circle cx="111.0" cy="62.9" r="3" fill="#FFFFFF"/><circle cx="137.8" cy="65.0" r="4" fill="#6BB2F0"/><circle cx="159.8" cy="79.2" r="3" fill="#6BB2F0"/><circle cx="171.2" cy="101.7" r="4" fill="#FFFFFF"/><circle cx="57.6" cy="143.1" r="4" fill="#6BB2F0"/><circle cx="48.0" cy="110.0" r="3" fill="#6BB2F0"/><circle cx="57.6" cy="76.9" r="4" fill="#FFFFFF"/><circle cx="84.0" cy="52.6" r="3" fill="#6BB2F0"/><circle cx="120.0" cy="43.8" r="4" fill="#6BB2F0"/><circle cx="156.0" cy="52.6" r="3" fill="#FFFFFF"/><circle cx="182.4" cy="76.9" r="4" fill="#6BB2F0"/><circle cx="192.0" cy="110.0" r="3" fill="#6BB2F0"/></g>
+    <text x="208" y="158" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="150" font-weight="800" letter-spacing="-4"><tspan fill="#FFFFFF">R</tspan><tspan fill="#6BB2F0">K</tspan></text>
+  </svg>
+  <h1>Prompt inžiniering — pokročilé techniky</h1>
+  <p>10 techník pokročilého promptovania pre strojárske firmy: nákup, procesné inžinierstvo, sales. Ku každej technike 3 hotové prompty na skopírovanie a dopad na výsledok.</p>
+  <svg class="net-deco" viewBox="40 36 160 115" aria-hidden="true">
+    <g fill="none" stroke="#FFFFFF" stroke-width="1.4" opacity="0.9"><line x1="120" y1="110" x2="94.0" y2="96.2"/><line x1="120" y1="110" x2="105.0" y2="86.1"/><line x1="120" y1="110" x2="120.0" y2="82.4"/><line x1="120" y1="110" x2="135.0" y2="86.1"/><line x1="120" y1="110" x2="146.0" y2="96.2"/><line x1="94.0" y1="96.2" x2="105.0" y2="86.1"/><line x1="94.0" y1="96.2" x2="120.0" y2="82.4"/><line x1="94.0" y1="96.2" x2="68.8" y2="118.3"/><line x1="94.0" y1="96.2" x2="71.1" y2="93.6"/><line x1="94.0" y1="96.2" x2="86.6" y2="73.4"/><line x1="105.0" y1="86.1" x2="120.0" y2="82.4"/><line x1="105.0" y1="86.1" x2="135.0" y2="86.1"/><line x1="105.0" y1="86.1" x2="86.6" y2="73.4"/><line x1="105.0" y1="86.1" x2="111.0" y2="62.9"/><line x1="120.0" y1="82.4" x2="135.0" y2="86.1"/><line x1="120.0" y1="82.4" x2="146.0" y2="96.2"/><line x1="120.0" y1="82.4" x2="111.0" y2="62.9"/><line x1="120.0" y1="82.4" x2="137.8" y2="65.0"/><line x1="135.0" y1="86.1" x2="146.0" y2="96.2"/><line x1="135.0" y1="86.1" x2="111.0" y2="62.9"/><line x1="135.0" y1="86.1" x2="137.8" y2="65.0"/><line x1="135.0" y1="86.1" x2="159.8" y2="79.2"/><line x1="146.0" y1="96.2" x2="137.8" y2="65.0"/><line x1="146.0" y1="96.2" x2="159.8" y2="79.2"/><line x1="146.0" y1="96.2" x2="171.2" y2="101.7"/><line x1="68.8" y1="118.3" x2="71.1" y2="93.6"/><line x1="68.8" y1="118.3" x2="57.6" y2="143.1"/><line x1="68.8" y1="118.3" x2="48.0" y2="110.0"/><line x1="71.1" y1="93.6" x2="86.6" y2="73.4"/><line x1="71.1" y1="93.6" x2="48.0" y2="110.0"/><line x1="71.1" y1="93.6" x2="57.6" y2="76.9"/><line x1="86.6" y1="73.4" x2="111.0" y2="62.9"/><line x1="86.6" y1="73.4" x2="57.6" y2="76.9"/><line x1="86.6" y1="73.4" x2="84.0" y2="52.6"/><line x1="111.0" y1="62.9" x2="137.8" y2="65.0"/><line x1="111.0" y1="62.9" x2="84.0" y2="52.6"/><line x1="111.0" y1="62.9" x2="120.0" y2="43.8"/><line x1="137.8" y1="65.0" x2="159.8" y2="79.2"/><line x1="137.8" y1="65.0" x2="120.0" y2="43.8"/><line x1="137.8" y1="65.0" x2="156.0" y2="52.6"/><line x1="159.8" y1="79.2" x2="171.2" y2="101.7"/><line x1="159.8" y1="79.2" x2="156.0" y2="52.6"/><line x1="159.8" y1="79.2" x2="182.4" y2="76.9"/><line x1="171.2" y1="101.7" x2="182.4" y2="76.9"/><line x1="171.2" y1="101.7" x2="192.0" y2="110.0"/></g>
+  </svg>
+</div>
+
+<div class="meta">
+  <div class="meta-bar">
+    <span><b>10</b> techník</span>
+    <span>zameranie: <b>strojárska firma</b> (nákup · procesné inžinierstvo · sales)</span>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content" id="content"></main>
+</div>
+
+<footer>
+  <span>rastoai.sk</span>
+  <span>Rasťo Kozlík — Rasťo AI</span>
+</footer>
+
+<script>
+const techniques = [
+{
+  n: "01",
+  title: "Rola (Role prompting)",
+  why: "Prideliš AI konkrétnu profesijnú rolu a kontext, z ktorého má odpovedať. Model si „nasadí“ iný slovník, priority aj úroveň detailu.",
+  prompts: [
+    "Si skúsený procesný inžinier v strojárskej firme vyrábajúcej plechové diely a zvarence. Vysvetli kolegovi z nákupu rozdiel medzi laserovým rezaním a ohraňovaním tak, aby vedel, kedy si vyžiadať ktorú technológiu.",
+    "Si vedúci kvality v strojárskej výrobe. Napíš obchodníkovi interné vysvetlenie, prečo bola zákazka zamietnutá pri vstupnej kontrole, tak aby vedel odpovedať zákazníkovi bez toho, aby znel technicky bezradne.",
+    "Si skúsený obchodník v exporte plechových dielov do DE/AT. Priprav krátky argument pre nového zákazníka, prečo si vybrať nášho dodávateľa namiesto lacnejšej konkurencie z Ázie."
+  ],
+  impact: "Bez roly dostaneš všeobecnú definíciu. S rolou dostaneš odpoveď orientovanú na rozhodovanie, v jazyku zrozumiteľnom pre danú funkciu — nákupcu, obchodníka či vedenie."
+},
+{
+  n: "02",
+  title: "Few-shot prompting",
+  why: "Namiesto popisu, čo chceš, ukážeš 2-3 konkrétne príklady vstup → výstup. Model si odvodí vzor a pokračuje v ňom.",
+  prompts: [
+    "Preformuluj tieto interné poznámky z výroby na krátke hlásenie pre zákazníka.\nPoznámka: 'zvarenec 4521 - trhlina po zváraní, treba prerobiť' → Hlásenie: 'Diel 4521 neprešiel kontrolou kvality, zabezpečujeme opravu, termín sa nemení.'\nPoznámka: 'lakovňa mešká 2 dni, kompresor mimo prevádzky' → Hlásenie: 'Povrchová úprava má mierne meškanie kvôli technickej odstávke, nový termín potvrdíme do zajtra.'\nTeraz preformuluj: 'ohraňovanie - zle nastavený nástroj, 30 ks nezhodných'",
+    "Zaraď tieto reklamácie do kategórií Nízka / Stredná / Vysoká závažnosť podľa vzoru.\n'škrabanec na lakovanej ploche, kozmetická vada' → Nízka\n'rozmerová odchýlka 0,3mm mimo tolerancie, diel nejde zmontovať' → Vysoká\nTeraz zaraď: 'chýbajúci otvor na 2 z 50 kusov v dávke'",
+    "Napíš predmety e-mailov k cenovým ponukám podľa vzoru.\nPonuka na zvarence pre automotive zákazníka → 'Cenová ponuka: zvarence pre [zákazník] — platnosť 30 dní'\nPonuka na opakovanú dodávku plechových dielov → 'Nadväzná ponuka: pokračovanie dodávok [projekt]'\nTeraz over pre: ponuka na nový diel s dlhšou dodacou lehotou kvôli materiálu"
+  ],
+  impact: "Model presne trafí tón, dĺžku a mieru detailu podľa vzorov namiesto toho, aby si musel opisovať štýl slovami. Kľúčové pri firemnej komunikácii, kde chceš konzistentný hlas."
+},
+{
+  n: "03",
+  title: "Chain-of-thought",
+  why: "Explicitne požiadaš model, aby postupoval krok za krokom pred finálnou odpoveďou. Pomáha pri úlohách s viacerými premennými alebo výpočtami.",
+  prompts: [
+    "Zákazník potrebuje 500 ks zvarencov do 3 týždňov. Kapacita robotického zvárania je 40 ks/deň, ale 15% dielov ide na dodatočnú kontrolu (+1 deň navyše). Postupne rozober, či termín stihneme, a ukáž výpočet.",
+    "Lakovňa má kapacitu 300 m² dielov denne. Máme rozpracované 3 zákazky s rôznymi termínmi a rozmermi dielov. Postupne rozober, v akom poradí ich naplánovať, aby žiadna nemeškala, a zdôvodni poradie.",
+    "Máme ponuku na zákazku, ktorá by vyťažila CNC stroje na 80% počas 2 týždňov, no zároveň bežia bežné objednávky. Postupne zváž, či zákazku prijať, aké je riziko a čo by sa muselo posunúť."
+  ],
+  impact: "Bez CoT model často „preskočí“ na odhad, ktorý môže byť nesprávny. S krokovým rozborom vidíš logiku aj prípadnú chybu vo výpočte — a môžeš ju opraviť skôr, než sa odpoveď pošle zákazníkovi."
+},
+{
+  n: "04",
+  title: "Štruktúrovaný výstup",
+  why: "Presne definuješ formát výstupu (tabuľka, JSON), aby bol výsledok priamo použiteľný v ďalšom kroku, napríklad pri importe do systému.",
+  prompts: [
+    "Z tohto e-mailu od dodávateľa vytiahni dáta do tabuľky so stĺpcami: Materiál | Množstvo | Cena/ks | Termín dodania. Ak niektorý údaj chýba, napíš 'nezadané'.",
+    "Preveď túto objednávku zákazníka do JSON formátu s poľami: zakaznik, cislo_objednavky, polozky (pole objektov s nazov, mnozstvo, jednotka), termin_dodania. Pripravujem to na import do ERP.",
+    "Porovnaj troch dodávateľov ocele podľa priloženého textu do tabuľky so stĺpcami: Dodávateľ | Cena/t | Dodacia lehota | Minimálny odber | Platobné podmienky."
+  ],
+  impact: "Voľný text vyžaduje ručné prepisovanie do Excelu. Vynútený formát dáva výstup, ktorý rovno skopíruješ ďalej — šetrí čas a znižuje chybovosť pri prepise."
+},
+{
+  n: "05",
+  title: "Rozklad úlohy",
+  why: "Komplexnú úlohu rozdelíš na explicitné podúlohy priamo v prompte, namiesto jedného všeobecného zadania.",
+  prompts: [
+    "Priprav podklad na stretnutie s novým zákazníkom z Nemecka. Postupuj v troch krokoch: (1) zhrň naše referencie v exporte plechových dielov do DE/AT, (2) navrhni 3 otázky, ktoré sa ich opýtame na ich potreby, (3) navrhni štruktúru 20-minútovej prezentácie.",
+    "Priprav audit nového dodávateľa plechu. Postupuj v troch krokoch: (1) zoznam otázok na certifikáty a kvalitu, (2) zoznam otázok na kapacitu a logistiku, (3) navrhni kritériá, podľa ktorých ho porovnáme s aktuálnym dodávateľom.",
+    "Priprav plán zaškolenia nového obchodníka bez skúseností so strojárstvom. Postupuj v troch krokoch: (1) základné technické pojmy, ktoré musí poznať prvý týždeň, (2) štruktúra sprevádzania na prevádzke, (3) prvé samostatné úlohy po mesiaci."
+  ],
+  impact: "Jeden veľký nešpecifický prompt zvyčajne dá povrchnú odpoveď na všetko naraz. Rozklad núti model venovať pozornosť každej časti samostatne — výsledok je hlbší a lepšie použiteľný."
+},
+{
+  n: "06",
+  title: "Obmedzenia a negatívne príklady",
+  why: "Popíšeš nielen čo chceš, ale aj čo nechceš — vylúčiš nežiaduce vzory, dĺžku alebo tón.",
+  prompts: [
+    "Napíš LinkedIn post o tom, ako sme skrátili čas dodania zvarencov o 20%. Nepoužívaj slová 'inovatívny', 'revolučný' ani frázu 'sme radi, že vám môžeme oznámiť'. Max. 800 znakov, konkrétne čísla, žiadne emoji.",
+    "Napíš e-mail zákazníkovi o 3-dňovom meškaní dodávky. Neospravedlňuj sa viac ako raz, nepoužívaj frázu 'ospravedlňujeme sa za spôsobené komplikácie', drž sa faktov a nového termínu, max. 100 slov.",
+    "Napíš popis pracovnej pozície 'operátor CNC' na web. Nepoužívaj frázy 'dynamický tím', 'rodinná atmosféra' ani 'možnosť kariérneho rastu' bez konkrétneho príkladu. Každé tvrdenie podlož číslom alebo faktom."
+  ],
+  impact: "Bez obmedzení model siahne po naučených klišé. Explicitné „zákazy“ ho nútia hľadať alternatívne formulácie, čím text pôsobí prirodzenejšie a menej „AI“."
+},
+{
+  n: "07",
+  title: "Sebakontrola (Self-critique)",
+  why: "Po vygenerovaní odpovede požiadaš model, aby ju sám skritizoval podľa zadaných kritérií a upravil.",
+  prompts: [
+    "Skontroluj svoju odpoveď vyššie: obsahuje presné technické termíny pre laserové rezanie? Je zrozumiteľná pre človeka bez technického vzdelania? Ak nie, uprav ju.",
+    "Skontroluj cenovú ponuku vyššie: sedia súčty položiek s celkovou sumou? Je v nej niekde nekonzistentná mena alebo jednotka? Ak nájdeš chybu, oprav ju a vypíš, čo si zmenil.",
+    "Skontroluj e-mail zákazníkovi vyššie: sľubuje niečo, čo nevieme s istotou splniť (napr. presný dátum bez rezervy)? Ak áno, preformuluj to opatrnejšie."
+  ],
+  impact: "Prvý výstup je často „dosť dobrý“, ale nie optimálny. Vynútená druhá iterácia typicky odhalí nepresnosti alebo príliš odborný jazyk, ktoré by inak prešli bez povšimnutia."
+},
+{
+  n: "08",
+  title: "Reťazenie promptov",
+  why: "Namiesto jedného obrovského promptu rozdelíš prácu na sériu menších promptov, kde výstup jedného je vstupom ďalšieho.",
+  prompts: [
+    "Prompt 1: Zhrň tento 10-stranový technický dátový list materiálu do 5 bodov pre obchodníka.\n\nPrompt 2 (s výstupom z prvého): Na základe tohto zhrnutia napíš odpoveď zákazníkovi, ktorý sa pýta, či materiál vydrží vonkajšie použitie.",
+    "Prompt 1: Prepíš tento prepis hlasovej poznámky majstra zmeny do bodov usporiadaných podľa linky.\n\nPrompt 2 (s výstupom z prvého): Na základe týchto bodov napíš krátky report pre vedenie o priebehu zmeny — max. 5 viet.",
+    "Prompt 1: Analyzuj popis reklamácie a urči najpravdepodobnejšiu príčinu.\n\nPrompt 2 (s výstupom z prvého): Navrhni nápravné opatrenie na strane výroby.\n\nPrompt 3 (s výstupom z druhého): Napíš zákazníkovi e-mail, ktorý zhŕňa príčinu aj opatrenie."
+  ],
+  impact: "Jeden dlhý prompt so všetkým naraz často stráca presnosť pri komplexných dokumentoch. Reťazenie udrží kvalitu vysokú v každom kroku a dáva ti kontrolné body na opravu chyby skôr, než sa prenesie ďalej."
+},
+{
+  n: "09",
+  title: "Ukotvenie kontextom",
+  why: "Do promptu vložíš reálne interné dáta či dokumenty (cenník, smernicu, dátový list), aby model odpovedal na základe faktov, nie odhadov.",
+  prompts: [
+    "Tu je náš aktuálny cenník práškového lakovania (vlož text/tabuľku). Na základe neho vypočítaj cenu za lakovanie 200 dielov s rozmerom 40x40cm v štandardnej farbe RAL 7016.",
+    "Tu je naša interná smernica o vybavovaní reklamácií (vlož text). Na základe nej napíš odpoveď zákazníkovi, ktorý reklamuje 5 ks z dávky 200 ks kvôli rozmerovej odchýlke.",
+    "Tu je technický dátový list ocele S355 (vlož text). Na základe neho odpovedz zákazníkovi, či je materiál vhodný na nosnú konštrukciu vystavenú vonkajším poveternostným vplyvom."
+  ],
+  impact: "Bez dát si model „vymyslí“ hodnoverne znejúcu, ale nesprávnu cenu. S priloženými dátami počíta z reálnych čísel — kritické pri všetkom, kde sa rozhoduje o peniazoch alebo technických parametroch."
+},
+{
+  n: "10",
+  title: "Meta-prompting",
+  why: "Namiesto priameho zadania necháš model najprv navrhnúť alebo vylepšiť samotný prompt, ktorý potom použiješ opakovane.",
+  prompts: [
+    "Chcem od teba prompt, ktorý použijem na tvorbu týždenných reportov pre vedenie o stave zákaziek (termíny, nezhody, kapacita). Navrhni mi štruktúru promptu s premennými, ktoré budem meniť každý týždeň.",
+    "Chcem od teba prompt na tvorbu onboarding plánu pre nových operátorov výroby. Navrhni mi štruktúru promptu, ktorú budem vedieť rýchlo prispôsobiť pre rôzne pozície (zváranie, ohraňovanie, lakovanie).",
+    "Chcem od teba prompt na pravidelné hodnotenie dodávateľov (kvalita, termíny, cena, komunikácia). Navrhni mi štruktúru promptu aj to, aké vstupné dáta budem musieť vždy doplniť."
+  ],
+  impact: "Namiesto jednorazovej odpovede dostaneš znovupoužiteľný nástroj (šablónu promptu) — investícia 5 minút teraz šetrí čas pri každom ďalšom reporte."
+}
+];
+
+let active = 0;
+
+function renderSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = techniques.map((t, i) =>
+    `<button class="side-btn${i===active?' active':''}" data-idx="${i}">
+       <span class="badge">${t.n}</span><span>${t.title}</span>
+     </button>`
+  ).join('');
+  sidebar.querySelectorAll('.side-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      active = parseInt(btn.getAttribute('data-idx'));
+      renderSidebar();
+      renderContent();
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+}
+
+function renderContent(){
+  const t = techniques[active];
+  const content = document.getElementById('content');
+  const examplesHtml = t.prompts.map((p, i) => `
+    <div class="prompt-block">
+      <div class="prompt-head">
+        <span class="ex-label">Príklad ${i+1}</span>
+        <button class="copy-btn" data-idx="${i}">Kopírovať</button>
+      </div>
+      <pre id="prompt-${active}-${i}"></pre>
+    </div>
+  `).join('');
+
+  content.innerHTML = `
+    <div class="card">
+      <span class="num">${t.n}</span>
+      <h2>${t.title}</h2>
+      <p class="why">${t.why}</p>
+      <p class="examples-label">Prompty na skopírovanie</p>
+      ${examplesHtml}
+      <div class="impact"><b>Dopad na výsledok:</b> ${t.impact}</div>
+    </div>
+  `;
+
+  t.prompts.forEach((p, i) => {
+    document.getElementById(`prompt-${active}-${i}`).textContent = p;
+  });
+
+  content.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.getAttribute('data-idx'));
+      const text = techniques[active].prompts[idx];
+      const done = () => {
+        const original = btn.textContent;
+        btn.textContent = 'Skopírované ✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      } else {
+        fallbackCopy(text, done);
+      }
+    });
+  });
+}
+
+function fallbackCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  cb();
+}
+
+renderSidebar();
+renderContent();
+</script>
+
+</body>
+</html>
